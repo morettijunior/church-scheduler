@@ -8,13 +8,11 @@ class Evento:
     nome: str
     funcoes_necessarias: list = field(default_factory=list)
 
-    id: int = field(init=False)
+    id: int | None = None
 
-    _proximo_id: int = 1
+    _proximo_id = 1
 
     def __post_init__(self):
-        self.id = Evento._proximo_id
-        Evento._proximo_id += 1
 
         self.nome = self.nome.strip()
 
@@ -23,3 +21,9 @@ class Evento:
 
         if not self.data:
             raise ValueError("Data obrigatória")
+
+        if self.id is None:
+            self.id = Evento._proximo_id
+
+        if self.id >= Evento._proximo_id:
+            Evento._proximo_id = self.id + 1

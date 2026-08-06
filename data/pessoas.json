@@ -1,0 +1,53 @@
+[
+    {
+        "id": 1,
+        "nome": "Felix",
+        "telefone": "999999999",
+        "funcoes": [
+            "Atrio"
+        ],
+        "ativo": true,
+        "restricoes": []
+    },
+    {
+        "id": 2,
+        "nome": "Marcos",
+        "telefone": "888888888",
+        "funcoes": [
+            "Patio"
+        ],
+        "ativo": true,
+        "restricoes": []
+    },
+    {
+        "id": 3,
+        "nome": "Moretti",
+        "telefone": "123456",
+        "funcoes": [
+            "Porta",
+            "Atrio"
+        ],
+        "ativo": true,
+        "restricoes": []
+    },
+    {
+        "id": 4,
+        "nome": "Carlos",
+        "telefone": "777777777",
+        "funcoes": [
+            "Atrio"
+        ],
+        "ativo": true,
+        "restricoes": []
+    },
+    {
+        "id": 5,
+        "nome": "João",
+        "telefone": "666666666",
+        "funcoes": [
+            "Patio"
+        ],
+        "ativo": true,
+        "restricoes": []
+    }
+]

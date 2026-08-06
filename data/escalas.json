@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "eventos": [
+            {
+                "nome": "CULTO",
+                "data": "10/08/2026",
+                "alocacoes": [
+                    {
+                        "funcao": "Atrio",
+                        "pessoa": "Felix"
+                    }
+                ]
+            }
+        ]
+    }
+]
