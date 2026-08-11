@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
 
+from models.ocorrencia import Ocorrencia
+
 
 @dataclass
 class Escala:
-    eventos: list = field(default_factory=list)
+
+    ocorrencias: list[Ocorrencia] = field(default_factory=list)
 
     id: int | None = None
 

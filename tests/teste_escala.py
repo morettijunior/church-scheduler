@@ -3,7 +3,6 @@ from datetime import date
 from models.evento import Evento
 from models.ocorrencia import Ocorrencia
 from models.escala import Escala
-from storage.escala_storage import EscalaStorage
 
 
 evento = Evento(
@@ -36,16 +35,4 @@ escala = Escala(
 )
 
 
-escalas = [escala]
-
-
-storage = EscalaStorage()
-
-
-storage.salvar(escalas)
-
-
-escalas_carregadas = storage.carregar()
-
-
-print(escalas_carregadas)
+print(escala)

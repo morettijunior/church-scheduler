@@ -1,10 +1,8 @@
 from dataclasses import dataclass, field
-from datetime import date
 
 
 @dataclass
 class Evento:
-    data: date
     nome: str
     funcoes_necessarias: list = field(default_factory=list)
 
@@ -18,9 +16,6 @@ class Evento:
 
         if not self.nome:
             raise ValueError("Nome obrigatório")
-
-        if not self.data:
-            raise ValueError("Data obrigatória")
 
         if self.id is None:
             self.id = Evento._proximo_id

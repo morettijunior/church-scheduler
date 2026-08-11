@@ -1,7 +1,10 @@
 from pathlib import Path
 import json
+from datetime import date
 
 from models.escala import Escala
+from models.ocorrencia import Ocorrencia
+from models.evento import Evento
 
 
 class EscalaStorage:
@@ -58,12 +61,48 @@ class EscalaStorage:
 
         return {
             "id": escala.id,
-            "eventos": escala.eventos
+            "ocorrencias": [
+                self._ocorrencia_para_dict(ocorrencia)
+                for ocorrencia in escala.ocorrencias
+            ]
+        }
+
+    def _ocorrencia_para_dict(self, ocorrencia):
+
+        return {
+            "id": ocorrencia.id,
+            "data": ocorrencia.data.isoformat(),
+            "evento": {
+                "id": ocorrencia.evento.id,
+                "nome": ocorrencia.evento.nome,
+                "funcoes_necessarias": ocorrencia.evento.funcoes_necessarias
+            },
+            "atribuicoes": ocorrencia.atribuicoes
         }
 
     def _dict_para_escala(self, dados):
 
+        ocorrencias = [
+            self._dict_para_ocorrencia(ocorrencia)
+            for ocorrencia in dados["ocorrencias"]
+        ]
+
         return Escala(
             id=dados["id"],
-            eventos=dados["eventos"]
+            ocorrencias=ocorrencias
+        )
+
+    def _dict_para_ocorrencia(self, dados):
+
+        evento = Evento(
+            id=dados["evento"]["id"],
+            nome=dados["evento"]["nome"],
+            funcoes_necessarias=dados["evento"]["funcoes_necessarias"]
+        )
+
+        return Ocorrencia(
+            id=dados["id"],
+            data=date.fromisoformat(dados["data"]),
+            evento=evento,
+            atribuicoes=dados["atribuicoes"]
         )

@@ -1,5 +1,4 @@
 import json
-from datetime import date
 from pathlib import Path
 
 from models.evento import Evento
@@ -45,6 +44,11 @@ class EventoStorage:
             )
         )
 
+        if not dados:
+            eventos = self._eventos_padrao()
+            self.salvar(eventos)
+            return eventos
+
         eventos = [
             self._dict_para_evento(dado)
             for dado in dados
@@ -52,21 +56,29 @@ class EventoStorage:
 
         return eventos
 
+    def _eventos_padrao(self):
+        return [
+            Evento(
+                nome="CULTO"
+            ),
+            Evento(
+                nome="RJM"
+            ),
+            Evento(
+                nome="ENSAIO"
+            )
+        ]
+
     def _evento_para_dict(self, evento):
         return {
             "id": evento.id,
             "nome": evento.nome,
-            "funcoes_necessarias": evento.funcoes_necessarias,
-            "data": evento.data.isoformat()
+            "funcoes_necessarias": evento.funcoes_necessarias
         }
 
-
     def _dict_para_evento(self, dados):
-        data = date.fromisoformat(dados["data"])
-
         return Evento(
             id=dados["id"],
             nome=dados["nome"],
-            funcoes_necessarias=dados["funcoes_necessarias"],
-            data=data
+            funcoes_necessarias=dados["funcoes_necessarias"]
         )
