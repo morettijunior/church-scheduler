@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "id": 1,
+        "nome": "CULTO",
+        "funcoes_necessarias": [
+            "TEEESTE"
+        ]
+    },
+    {
+        "id": 2,
+        "nome": "RJM",
+        "funcoes_necessarias": [
+            "TEEESTE",
+            "TESTE 2"
+        ]
+    },
+    {
+        "id": 3,
+        "nome": "ENSAIO",
+        "funcoes_necessarias": []
+    }
+]

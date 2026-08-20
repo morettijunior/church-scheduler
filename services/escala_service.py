@@ -26,13 +26,14 @@ class EscalaService:
 
         return None
 
-    def criar(self, ocorrencias):
+    def criar(self, nome, ocorrencias):
 
         ocorrencias_ordenadas = self._ordenar_ocorrencias(
             ocorrencias
         )
 
         escala = Escala(
+            nome=nome,
             ocorrencias=ocorrencias_ordenadas
         )
 

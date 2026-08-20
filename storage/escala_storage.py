@@ -61,6 +61,7 @@ class EscalaStorage:
 
         return {
             "id": escala.id,
+            "nome": escala.nome,
             "ocorrencias": [
                 self._ocorrencia_para_dict(ocorrencia)
                 for ocorrencia in escala.ocorrencias
@@ -89,6 +90,7 @@ class EscalaStorage:
 
         return Escala(
             id=dados["id"],
+            nome=dados["nome"],
             ocorrencias=ocorrencias
         )
 
