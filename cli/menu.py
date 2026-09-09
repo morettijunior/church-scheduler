@@ -28,9 +28,8 @@ def iniciar(
         )
 
         if opcao == "0":
-            print(
-                "Encerrando..."
-            )
+            print()
+            print("Encerrando...")
             return None
 
         elif opcao == "1":
@@ -38,6 +37,7 @@ def iniciar(
                 pessoa_service,
                 funcao_service
             )
+
             if resultado:
                 return "pessoa"
 
@@ -45,6 +45,7 @@ def iniciar(
             resultado = funcao_cli.iniciar(
                 funcao_service
             )
+
             if resultado:
                 return "funcao"
 
@@ -53,6 +54,7 @@ def iniciar(
                 evento_service,
                 funcao_service
             )
+
             if resultado:
                 return "evento"
 
@@ -64,10 +66,11 @@ def iniciar(
                 gerador_escala_service,
                 motor_distribuicao
             )
+
             if resultado:
                 return "escala"
 
         else:
-            print(
-                "Opção inválida."
-            )
+            print()
+            print("Opção inválida.")
+

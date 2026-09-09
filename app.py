@@ -48,35 +48,41 @@ def main():
 
     motor_distribuicao = MotorDistribuicao()
 
-    resultado = iniciar(
-        pessoa_service,
-        funcao_service,
-        evento_service,
-        escala_service,
-        gerador_escala_service,
-        motor_distribuicao
-    )
+    while True:
 
-    if resultado == "pessoa":
-        pessoa_storage.salvar(
-            pessoas
+        resultado = iniciar(
+            pessoa_service,
+            funcao_service,
+            evento_service,
+            escala_service,
+            gerador_escala_service,
+            motor_distribuicao
         )
 
-    if resultado == "funcao":
-        funcao_storage.salvar(
-            funcoes
-        )
+        if resultado is None:
+            break
 
-    if resultado == "evento":
-        evento_storage.salvar(
-            eventos
-        )
+        if resultado == "pessoa":
+            pessoa_storage.salvar(
+                pessoas
+            )
 
-    if resultado == "escala":
-        escala_storage.salvar(
-            escalas
-        )
+        elif resultado == "funcao":
+            funcao_storage.salvar(
+                funcoes
+            )
+
+        elif resultado == "evento":
+            evento_storage.salvar(
+                eventos
+            )
+
+        elif resultado == "escala":
+            escala_storage.salvar(
+                escalas
+            )
 
 
 if __name__ == "__main__":
     main()
+

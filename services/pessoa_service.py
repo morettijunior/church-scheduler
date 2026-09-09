@@ -8,31 +8,41 @@ class PessoaService:
 
     def listar_ativos(self) -> list[Pessoa]:
         ativos = []
+
         for pessoa in self._pessoas:
             if pessoa.ativo:
                 ativos.append(pessoa)
+
         ativos.sort(key=lambda pessoa: pessoa.nome)
+
         return ativos
 
     def listar_inativos(self) -> list[Pessoa]:
         inativos = []
+
         for pessoa in self._pessoas:
             if not pessoa.ativo:
                 inativos.append(pessoa)
+
         inativos.sort(key=lambda pessoa: pessoa.nome)
+
         return inativos
 
     def listar_todos(self) -> list[Pessoa]:
         todos = []
+
         for pessoa in self._pessoas:
             todos.append(pessoa)
+
         todos.sort(key=lambda pessoa: pessoa.id)
+
         return todos
 
     def buscar_por_id(self, id: int) -> Pessoa | None:
         for pessoa in self._pessoas:
             if pessoa.id == id:
                 return pessoa
+
         return None
 
     def cadastrar(
@@ -66,7 +76,10 @@ class PessoaService:
                 return {
                     "sucesso": False,
                     "alterado": False,
-                    "mensagem": f"Usuário já cadastrado (ID nº {pessoa.id})"
+                    "mensagem": (
+                        f"Usuário já cadastrado "
+                        f"(ID nº {pessoa.id})"
+                    )
                 }
 
         pessoa = Pessoa(
@@ -181,6 +194,30 @@ class PessoaService:
             "mensagem": "Pessoa ativada"
         }
 
+    def possui_restricao(self, pessoa: Pessoa, data) -> bool:
+        for restricao in pessoa.restricoes:
+
+            if not isinstance(restricao, dict):
+                continue
+
+            tipo = restricao.get("tipo")
+            valor = restricao.get("valor")
+
+            if tipo == "DIA_SEMANA":
+                try:
+                    dia_semana = int(valor)
+                except (TypeError, ValueError):
+                    continue
+
+                if data.weekday() == dia_semana:
+                    return True
+
+            elif tipo == "DATA":
+                if valor == data.strftime("%d/%m/%Y"):
+                    return True
+
+        return False
+
     def validar_aptidao(
         self,
         id: int,
@@ -209,7 +246,7 @@ class PessoaService:
                 )
             }
 
-        if data in pessoa.restricoes:
+        if self.possui_restricao(pessoa, data):
             return {
                 "sucesso": False,
                 "mensagem": (

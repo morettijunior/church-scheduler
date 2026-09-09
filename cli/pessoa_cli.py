@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 def iniciar(pessoa_service, funcao_service):
     alterado = False
 
@@ -34,6 +37,7 @@ def iniciar(pessoa_service, funcao_service):
                 pessoa_service,
                 funcao_service
             )
+
             if resultado["alterado"]:
                 alterado = True
 
@@ -42,16 +46,19 @@ def iniciar(pessoa_service, funcao_service):
                 pessoa_service,
                 funcao_service
             )
+
             if resultado["alterado"]:
                 alterado = True
 
         elif opcao == "6":
             resultado = ativar(pessoa_service)
+
             if resultado["alterado"]:
                 alterado = True
 
         elif opcao == "7":
             resultado = inativar(pessoa_service)
+
             if resultado["alterado"]:
                 alterado = True
 
@@ -74,17 +81,22 @@ def listar_ativos(pessoa_service):
         f"{'ID':<5}"
         f"{'NOME':<25}"
         f"{'TELEFONE':<20}"
-        f"FUNÇÕES"
+        f"{'FUNÇÕES':<25}"
+        f"RESTRIÇÕES"
     )
 
     for pessoa in pessoas:
         funcoes = ", ".join(pessoa.funcoes)
+        restricoes = formatar_restricoes(
+            pessoa.restricoes
+        )
 
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
             f"{pessoa.telefone:<20}"
-            f"{funcoes}"
+            f"{funcoes:<25}"
+            f"{restricoes}"
         )
 
 
@@ -103,17 +115,22 @@ def listar_inativos(pessoa_service):
         f"{'ID':<5}"
         f"{'NOME':<25}"
         f"{'TELEFONE':<20}"
-        f"FUNÇÕES"
+        f"{'FUNÇÕES':<25}"
+        f"RESTRIÇÕES"
     )
 
     for pessoa in pessoas:
         funcoes = ", ".join(pessoa.funcoes)
+        restricoes = formatar_restricoes(
+            pessoa.restricoes
+        )
 
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
             f"{pessoa.telefone:<20}"
-            f"{funcoes}"
+            f"{funcoes:<25}"
+            f"{restricoes}"
         )
 
 
@@ -133,10 +150,12 @@ def listar_todas(pessoa_service):
         f"{'NOME':<25}"
         f"{'TELEFONE':<20}"
         f"{'STATUS':<10}"
-        f"FUNÇÕES"
+        f"{'FUNÇÕES':<25}"
+        f"RESTRIÇÕES"
     )
 
     for pessoa in pessoas:
+
         if pessoa.ativo:
             status = "ATIVO"
         else:
@@ -144,12 +163,17 @@ def listar_todas(pessoa_service):
 
         funcoes = ", ".join(pessoa.funcoes)
 
+        restricoes = formatar_restricoes(
+            pessoa.restricoes
+        )
+
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
             f"{pessoa.telefone:<20}"
             f"{status:<10}"
-            f"{funcoes}"
+            f"{funcoes:<25}"
+            f"{restricoes}"
         )
 
 
@@ -161,9 +185,11 @@ def cadastrar(pessoa_service, funcao_service):
     nome = input("Nome: ")
     telefone = input("Telefone: ")
 
-    funcoes = selecionar_funcoes(funcao_service)
+    funcoes = selecionar_funcoes(
+        funcao_service
+    )
 
-    restricoes = []
+    restricoes = selecionar_restricoes()
 
     resultado = pessoa_service.cadastrar(
         nome,
@@ -247,11 +273,31 @@ def atualizar(pessoa_service, funcao_service):
     ).strip().upper()
 
     if alterar_funcoes == "S":
-        funcoes = selecionar_funcoes(funcao_service)
+        funcoes = selecionar_funcoes(
+            funcao_service
+        )
     else:
         funcoes = pessoa.funcoes
 
-    restricoes = pessoa.restricoes
+    print()
+    print("Restrições atuais:")
+
+    restricoes_atuais = formatar_restricoes(
+        pessoa.restricoes
+    )
+
+    print(restricoes_atuais)
+
+    print()
+
+    alterar_restricoes = input(
+        "Deseja alterar as restrições? (S/N): "
+    ).strip().upper()
+
+    if alterar_restricoes == "S":
+        restricoes = selecionar_restricoes()
+    else:
+        restricoes = pessoa.restricoes
 
     resultado = pessoa_service.atualizar(
         id,
@@ -295,7 +341,9 @@ def selecionar_funcoes(funcao_service):
     )
     print()
 
-    entrada = input("IDs das funções: ").strip()
+    entrada = input(
+        "IDs das funções: "
+    ).strip()
 
     if entrada == "":
         return []
@@ -306,6 +354,7 @@ def selecionar_funcoes(funcao_service):
     ids_selecionados = set()
 
     for id_texto in ids_texto:
+
         id_texto = id_texto.strip()
 
         if not id_texto.isdigit():
@@ -340,9 +389,232 @@ def selecionar_funcoes(funcao_service):
             funcao.nome
         )
 
-        ids_selecionados.add(id_funcao)
+        ids_selecionados.add(
+            id_funcao
+        )
 
     return funcoes_selecionadas
+
+
+def selecionar_restricoes():
+    restricoes = []
+
+    while True:
+
+        print()
+        print("=== RESTRIÇÕES ===")
+        print()
+        print("1 - Não pode em dias da semana")
+        print("2 - Não pode em datas específicas")
+        print("3 - Remover todas as restrições")
+        print("0 - Finalizar")
+        print()
+
+        opcao = input(
+            "Escolha uma opção: "
+        ).strip()
+
+        if opcao == "0":
+            break
+
+        elif opcao == "1":
+            novas_restricoes = selecionar_dias_semana()
+
+            for restricao in novas_restricoes:
+                if restricao not in restricoes:
+                    restricoes.append(restricao)
+
+        elif opcao == "2":
+            novas_restricoes = selecionar_datas()
+
+            for restricao in novas_restricoes:
+                if restricao not in restricoes:
+                    restricoes.append(restricao)
+
+        elif opcao == "3":
+            restricoes = []
+
+            print()
+            print("Todas as restrições foram removidas.")
+
+        else:
+            print("Opção inválida.")
+
+    return restricoes
+
+
+def selecionar_dias_semana():
+    dias = [
+        (1, "SEGUNDA-FEIRA"),
+        (2, "TERÇA-FEIRA"),
+        (3, "QUARTA-FEIRA"),
+        (4, "QUINTA-FEIRA"),
+        (5, "SEXTA-FEIRA"),
+        (6, "SÁBADO"),
+        (7, "DOMINGO")
+    ]
+
+    print()
+    print("=== DIAS DA SEMANA ===")
+    print()
+
+    for numero, nome in dias:
+        print(
+            f"{numero} - {nome}"
+        )
+
+    print()
+    print(
+        "Digite os números separados por vírgula."
+    )
+    print(
+        "Exemplo: 1,3,7"
+    )
+    print()
+
+    entrada = input(
+        "Dias: "
+    ).strip()
+
+    if entrada == "":
+        return []
+
+    restricoes = []
+
+    for valor in entrada.split(","):
+
+        valor = valor.strip()
+
+        if not valor.isdigit():
+            print(
+                f"Dia inválido ignorado: {valor}"
+            )
+            continue
+
+        numero = int(valor)
+
+        if numero < 1 or numero > 7:
+            print(
+                f"Dia inválido ignorado: {numero}"
+            )
+            continue
+
+        restricao = {
+            "tipo": "DIA_SEMANA",
+            "valor": numero - 1
+        }
+
+        if restricao not in restricoes:
+            restricoes.append(
+                restricao
+            )
+
+    return restricoes
+
+
+def selecionar_datas():
+    print()
+    print("=== DATAS ESPECÍFICAS ===")
+    print()
+    print(
+        "Digite as datas no formato DD/MM/AAAA."
+    )
+    print(
+        "Separe várias datas por vírgula."
+    )
+    print(
+        "Exemplo: 10/09/2026,25/12/2026"
+    )
+    print()
+
+    entrada = input(
+        "Datas: "
+    ).strip()
+
+    if entrada == "":
+        return []
+
+    restricoes = []
+
+    for valor in entrada.split(","):
+
+        valor = valor.strip()
+
+        try:
+            data = datetime.strptime(
+                valor,
+                "%d/%m/%Y"
+            ).date()
+
+        except ValueError:
+            print(
+                f"Data inválida ignorada: {valor}"
+            )
+            continue
+
+        restricao = {
+            "tipo": "DATA",
+            "valor": data.strftime("%d/%m/%Y")
+        }
+
+        if restricao not in restricoes:
+            restricoes.append(
+                restricao
+            )
+
+    return restricoes
+
+
+def formatar_restricoes(restricoes):
+    if not restricoes:
+        return "NENHUMA"
+
+    nomes_dias = {
+        0: "SEG",
+        1: "TER",
+        2: "QUA",
+        3: "QUI",
+        4: "SEX",
+        5: "SAB",
+        6: "DOM"
+    }
+
+    resultado = []
+
+    for restricao in restricoes:
+
+        if not isinstance(restricao, dict):
+            continue
+
+        tipo = restricao.get("tipo")
+        valor = restricao.get("valor")
+
+        if tipo == "DIA_SEMANA":
+
+            try:
+                dia = int(valor)
+            except (TypeError, ValueError):
+                continue
+
+            nome_dia = nomes_dias.get(
+                dia,
+                "?"
+            )
+
+            resultado.append(
+                f"NÃO {nome_dia}"
+            )
+
+        elif tipo == "DATA":
+
+            resultado.append(
+                f"NÃO {valor}"
+            )
+
+    if not resultado:
+        return "NENHUMA"
+
+    return ", ".join(resultado)
 
 
 def ativar(pessoa_service):

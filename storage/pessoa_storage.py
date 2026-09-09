@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import json
 
 from models.pessoa import Pessoa
@@ -62,11 +63,17 @@ class PessoaStorage:
         }
 
     def _dict_para_pessoa(self, dados):
+        restricoes = dados.get(
+            "restricoes",
+            []
+        )
+
         return Pessoa(
             id=dados["id"],
             nome=dados["nome"],
             telefone=dados["telefone"],
-            funcoes=dados["funcoes"],
-            ativo=dados["ativo"],
-            restricoes=dados["restricoes"]
+            funcoes=dados.get("funcoes", []),
+            ativo=dados.get("ativo", True),
+            restricoes=restricoes
         )
+
