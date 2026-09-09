@@ -1,9 +1,7 @@
-def iniciar(pessoa_service):
-
+def iniciar(pessoa_service, funcao_service):
     alterado = False
 
     while True:
-
         print()
         print("=== PESSOAS ===")
         print()
@@ -32,26 +30,28 @@ def iniciar(pessoa_service):
             listar_todas(pessoa_service)
 
         elif opcao == "4":
-            resultado = cadastrar(pessoa_service)
-
+            resultado = cadastrar(
+                pessoa_service,
+                funcao_service
+            )
             if resultado["alterado"]:
                 alterado = True
 
         elif opcao == "5":
-            resultado = atualizar(pessoa_service)
-
+            resultado = atualizar(
+                pessoa_service,
+                funcao_service
+            )
             if resultado["alterado"]:
                 alterado = True
 
         elif opcao == "6":
             resultado = ativar(pessoa_service)
-
             if resultado["alterado"]:
                 alterado = True
 
         elif opcao == "7":
             resultado = inativar(pessoa_service)
-
             if resultado["alterado"]:
                 alterado = True
 
@@ -60,7 +60,6 @@ def iniciar(pessoa_service):
 
 
 def listar_ativos(pessoa_service):
-
     pessoas = pessoa_service.listar_ativos()
 
     print()
@@ -71,19 +70,25 @@ def listar_ativos(pessoa_service):
         print("Nenhuma pessoa ativa cadastrada.")
         return
 
-    print(f"{'ID':<5}{'NOME':<25}{'TELEFONE'}")
+    print(
+        f"{'ID':<5}"
+        f"{'NOME':<25}"
+        f"{'TELEFONE':<20}"
+        f"FUNÇÕES"
+    )
 
     for pessoa in pessoas:
+        funcoes = ", ".join(pessoa.funcoes)
 
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
-            f"{pessoa.telefone}"
+            f"{pessoa.telefone:<20}"
+            f"{funcoes}"
         )
 
 
 def listar_inativos(pessoa_service):
-
     pessoas = pessoa_service.listar_inativos()
 
     print()
@@ -94,19 +99,25 @@ def listar_inativos(pessoa_service):
         print("Nenhuma pessoa inativa cadastrada.")
         return
 
-    print(f"{'ID':<5}{'NOME':<25}{'TELEFONE'}")
+    print(
+        f"{'ID':<5}"
+        f"{'NOME':<25}"
+        f"{'TELEFONE':<20}"
+        f"FUNÇÕES"
+    )
 
     for pessoa in pessoas:
+        funcoes = ", ".join(pessoa.funcoes)
 
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
-            f"{pessoa.telefone}"
+            f"{pessoa.telefone:<20}"
+            f"{funcoes}"
         )
 
 
 def listar_todas(pessoa_service):
-
     pessoas = pessoa_service.listar_todos()
 
     print()
@@ -121,26 +132,28 @@ def listar_todas(pessoa_service):
         f"{'ID':<5}"
         f"{'NOME':<25}"
         f"{'TELEFONE':<20}"
-        f"{'STATUS'}"
+        f"{'STATUS':<10}"
+        f"FUNÇÕES"
     )
 
     for pessoa in pessoas:
-
         if pessoa.ativo:
             status = "ATIVO"
         else:
             status = "INATIVO"
 
+        funcoes = ", ".join(pessoa.funcoes)
+
         print(
             f"{pessoa.id:<5}"
             f"{pessoa.nome:<25}"
             f"{pessoa.telefone:<20}"
-            f"{status}"
+            f"{status:<10}"
+            f"{funcoes}"
         )
 
 
-def cadastrar(pessoa_service):
-
+def cadastrar(pessoa_service, funcao_service):
     print()
     print("=== CADASTRAR PESSOA ===")
     print()
@@ -148,10 +161,8 @@ def cadastrar(pessoa_service):
     nome = input("Nome: ")
     telefone = input("Telefone: ")
 
-    # Temporariamente vazias.
-    # Vamos implementar funções e restrições
-    # depois, através dos respectivos menus.
-    funcoes = []
+    funcoes = selecionar_funcoes(funcao_service)
+
     restricoes = []
 
     resultado = pessoa_service.cadastrar(
@@ -167,13 +178,22 @@ def cadastrar(pessoa_service):
     return resultado
 
 
-def atualizar(pessoa_service):
-
+def atualizar(pessoa_service, funcao_service):
     print()
     print("=== ATUALIZAR PESSOA ===")
     print()
 
-    id = int(input("ID da pessoa: "))
+    try:
+        id = int(input("ID da pessoa: "))
+    except ValueError:
+        print()
+        print("Digite um ID válido.")
+
+        return {
+            "sucesso": False,
+            "alterado": False,
+            "mensagem": "Digite um ID válido"
+        }
 
     pessoa = pessoa_service.buscar_por_id(id)
 
@@ -187,10 +207,50 @@ def atualizar(pessoa_service):
             "mensagem": "Digite um ID válido"
         }
 
-    nome = input("Novo nome: ")
-    telefone = input("Novo telefone: ")
+    print()
+    print(f"Nome atual: {pessoa.nome}")
 
-    funcoes = pessoa.funcoes
+    novo_nome = input(
+        "Novo nome (ENTER mantém o atual): "
+    ).strip()
+
+    if novo_nome == "":
+        nome = pessoa.nome
+    else:
+        nome = novo_nome
+
+    print()
+    print(f"Telefone atual: {pessoa.telefone}")
+
+    novo_telefone = input(
+        "Novo telefone (ENTER mantém o atual): "
+    ).strip()
+
+    if novo_telefone == "":
+        telefone = pessoa.telefone
+    else:
+        telefone = novo_telefone
+
+    print()
+    print("Funções atuais:")
+
+    if pessoa.funcoes:
+        for funcao in pessoa.funcoes:
+            print(f"- {funcao}")
+    else:
+        print("Nenhuma função cadastrada.")
+
+    print()
+
+    alterar_funcoes = input(
+        "Deseja alterar as funções? (S/N): "
+    ).strip().upper()
+
+    if alterar_funcoes == "S":
+        funcoes = selecionar_funcoes(funcao_service)
+    else:
+        funcoes = pessoa.funcoes
+
     restricoes = pessoa.restricoes
 
     resultado = pessoa_service.atualizar(
@@ -207,13 +267,100 @@ def atualizar(pessoa_service):
     return resultado
 
 
-def ativar(pessoa_service):
+def selecionar_funcoes(funcao_service):
+    funcoes_ativas = funcao_service.listar_ativos()
 
+    print()
+    print("=== SELECIONAR FUNÇÕES ===")
+    print()
+
+    if not funcoes_ativas:
+        print("Nenhuma função ativa cadastrada.")
+        return []
+
+    for funcao in funcoes_ativas:
+        print(
+            f"{funcao.id} - {funcao.nome}"
+        )
+
+    print()
+    print(
+        "Digite os IDs das funções separados por vírgula."
+    )
+    print(
+        "Exemplo: 1,2,3"
+    )
+    print(
+        "Deixe vazio caso a pessoa não tenha função."
+    )
+    print()
+
+    entrada = input("IDs das funções: ").strip()
+
+    if entrada == "":
+        return []
+
+    ids_texto = entrada.split(",")
+
+    funcoes_selecionadas = []
+    ids_selecionados = set()
+
+    for id_texto in ids_texto:
+        id_texto = id_texto.strip()
+
+        if not id_texto.isdigit():
+            print(
+                f"ID inválido ignorado: {id_texto}"
+            )
+            continue
+
+        id_funcao = int(id_texto)
+
+        if id_funcao in ids_selecionados:
+            continue
+
+        funcao = funcao_service.buscar_por_id(
+            id_funcao
+        )
+
+        if funcao is None:
+            print(
+                f"Função não encontrada: {id_funcao}"
+            )
+            continue
+
+        if not funcao.ativo:
+            print(
+                f"Função inativa não pode ser atribuída: "
+                f"{funcao.nome}"
+            )
+            continue
+
+        funcoes_selecionadas.append(
+            funcao.nome
+        )
+
+        ids_selecionados.add(id_funcao)
+
+    return funcoes_selecionadas
+
+
+def ativar(pessoa_service):
     print()
     print("=== ATIVAR PESSOA ===")
     print()
 
-    id = int(input("ID da pessoa: "))
+    try:
+        id = int(input("ID da pessoa: "))
+    except ValueError:
+        print()
+        print("Digite um ID válido.")
+
+        return {
+            "sucesso": False,
+            "alterado": False,
+            "mensagem": "Digite um ID válido"
+        }
 
     pessoa = pessoa_service.buscar_por_id(id)
 
@@ -236,12 +383,21 @@ def ativar(pessoa_service):
 
 
 def inativar(pessoa_service):
-
     print()
     print("=== INATIVAR PESSOA ===")
     print()
 
-    id = int(input("ID da pessoa: "))
+    try:
+        id = int(input("ID da pessoa: "))
+    except ValueError:
+        print()
+        print("Digite um ID válido.")
+
+        return {
+            "sucesso": False,
+            "alterado": False,
+            "mensagem": "Digite um ID válido"
+        }
 
     pessoa = pessoa_service.buscar_por_id(id)
 

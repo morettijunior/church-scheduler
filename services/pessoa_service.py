@@ -7,49 +7,32 @@ class PessoaService:
         self._pessoas = pessoas
 
     def listar_ativos(self) -> list[Pessoa]:
-
         ativos = []
-
         for pessoa in self._pessoas:
-
             if pessoa.ativo:
                 ativos.append(pessoa)
-
         ativos.sort(key=lambda pessoa: pessoa.nome)
-
         return ativos
 
     def listar_inativos(self) -> list[Pessoa]:
-
         inativos = []
-
         for pessoa in self._pessoas:
-
             if not pessoa.ativo:
                 inativos.append(pessoa)
-
         inativos.sort(key=lambda pessoa: pessoa.nome)
-
         return inativos
 
     def listar_todos(self) -> list[Pessoa]:
-
         todos = []
-
         for pessoa in self._pessoas:
             todos.append(pessoa)
-
         todos.sort(key=lambda pessoa: pessoa.id)
-
         return todos
 
     def buscar_por_id(self, id: int) -> Pessoa | None:
-
         for pessoa in self._pessoas:
-
             if pessoa.id == id:
                 return pessoa
-
         return None
 
     def cadastrar(
@@ -59,8 +42,8 @@ class PessoaService:
         funcoes: list,
         restricoes: list
     ):
-
-        nome = nome.strip().upper()
+        nome = nome.strip()
+        telefone = telefone.strip()
 
         if nome == "":
             return {
@@ -69,8 +52,16 @@ class PessoaService:
                 "mensagem": "Necessário cadastrar nome de usuário"
             }
 
-        for pessoa in self._pessoas:
+        if telefone == "":
+            return {
+                "sucesso": False,
+                "alterado": False,
+                "mensagem": "Necessário cadastrar telefone"
+            }
 
+        nome = nome.upper()
+
+        for pessoa in self._pessoas:
             if pessoa.nome.strip().upper() == nome:
                 return {
                     "sucesso": False,
@@ -101,7 +92,6 @@ class PessoaService:
         funcoes: list,
         restricoes: list
     ):
-
         pessoa = self.buscar_por_id(id)
 
         if pessoa is None:
@@ -111,10 +101,26 @@ class PessoaService:
                 "mensagem": "Digite um ID válido"
             }
 
-        nome = nome.strip().upper()
+        nome = nome.strip()
+        telefone = telefone.strip()
+
+        if nome == "":
+            return {
+                "sucesso": False,
+                "alterado": False,
+                "mensagem": "Necessário cadastrar nome de usuário"
+            }
+
+        if telefone == "":
+            return {
+                "sucesso": False,
+                "alterado": False,
+                "mensagem": "Necessário cadastrar telefone"
+            }
+
+        nome = nome.upper()
 
         for outra_pessoa in self._pessoas:
-
             if (
                 outra_pessoa.nome.strip().upper() == nome
                 and outra_pessoa.id != id
@@ -140,7 +146,6 @@ class PessoaService:
         }
 
     def desativar(self, id: int):
-
         pessoa = self.buscar_por_id(id)
 
         if pessoa is None:
@@ -159,7 +164,6 @@ class PessoaService:
         }
 
     def ativar(self, id: int):
-
         pessoa = self.buscar_por_id(id)
 
         if pessoa is None:
@@ -183,7 +187,6 @@ class PessoaService:
         funcao: str,
         data
     ):
-
         pessoa = self.buscar_por_id(id)
 
         if pessoa is None:

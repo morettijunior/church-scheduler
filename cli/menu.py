@@ -8,11 +8,11 @@ def iniciar(
     pessoa_service,
     funcao_service,
     evento_service,
-    escala_service
+    escala_service,
+    gerador_escala_service,
+    motor_distribuicao
 ):
-
     while True:
-
         print()
         print("=== CHURCH SCHEDULER ===")
         print()
@@ -23,48 +23,51 @@ def iniciar(
         print("0 - Sair")
         print()
 
-        opcao = input("Escolha uma opção: ")
+        opcao = input(
+            "Escolha uma opção: "
+        )
 
         if opcao == "0":
-            print("Encerrando...")
+            print(
+                "Encerrando..."
+            )
             return None
 
         elif opcao == "1":
-
             resultado = pessoa_cli.iniciar(
-                pessoa_service
+                pessoa_service,
+                funcao_service
             )
-
             if resultado:
                 return "pessoa"
 
         elif opcao == "2":
-
             resultado = funcao_cli.iniciar(
                 funcao_service
             )
-
             if resultado:
                 return "funcao"
 
         elif opcao == "3":
-
             resultado = evento_cli.iniciar(
                 evento_service,
                 funcao_service
             )
-
             if resultado:
                 return "evento"
 
         elif opcao == "4":
-
             resultado = escala_cli.iniciar(
-                escala_service
+                escala_service,
+                pessoa_service,
+                evento_service,
+                gerador_escala_service,
+                motor_distribuicao
             )
-
             if resultado:
                 return "escala"
 
         else:
-            print("Opção inválida.")
+            print(
+                "Opção inválida."
+            )

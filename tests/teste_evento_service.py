@@ -23,7 +23,7 @@ service = EventoService(
 
 resultado = service.atualizar(
     1,
-    []
+    ["ATRIO", "EBI"]
 )
 
 print(resultado)
