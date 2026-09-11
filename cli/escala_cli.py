@@ -3,6 +3,10 @@ from datetime import date
 from models.configuracao_escala import ConfiguracaoEscala
 from scheduler.evento_configurado import EventoConfigurado
 
+from services.exportador_excel_service import (
+    ExportadorExcelService
+)
+
 
 def iniciar(
     escala_service,
@@ -11,33 +15,46 @@ def iniciar(
     gerador_escala_service,
     motor_distribuicao
 ):
+    alterado = False
+
     while True:
+
         print()
         print("=== ESCALAS ===")
         print()
         print("1 - Listar escalas")
         print("2 - Visualizar escala")
         print("3 - Gerar nova escala")
+        print("4 - Exportar escala")
         print("0 - Voltar")
         print()
 
-        opcao = input("Escolha uma opção: ")
+        opcao = input(
+            "Escolha uma opção: "
+        )
 
         if opcao == "0":
+
+            if alterado:
+                return "escala"
+
             return False
 
         elif opcao == "1":
+
             listar(
                 escala_service
             )
 
         elif opcao == "2":
+
             visualizar(
                 escala_service
             )
 
         elif opcao == "3":
-            gerar_nova_escala(
+
+            resultado = gerar_nova_escala(
                 escala_service,
                 pessoa_service,
                 evento_service,
@@ -45,11 +62,28 @@ def iniciar(
                 motor_distribuicao
             )
 
+            if resultado:
+                alterado = True
+
+        elif opcao == "4":
+
+            exportar(
+                escala_service,
+                pessoa_service
+            )
+
         else:
-            print("Opção inválida.")
+
+            print()
+            print(
+                "Opção inválida."
+            )
 
 
-def listar(escala_service):
+def listar(
+    escala_service
+):
+
     escalas = escala_service.listar_todas()
 
     print()
@@ -57,7 +91,9 @@ def listar(escala_service):
     print()
 
     if not escalas:
-        print("Nenhuma escala cadastrada.")
+        print(
+            "Nenhuma escala cadastrada."
+        )
         return
 
     print(
@@ -67,6 +103,7 @@ def listar(escala_service):
     )
 
     for escala in escalas:
+
         periodo = obter_periodo(
             escala
         )
@@ -78,16 +115,22 @@ def listar(escala_service):
         )
 
 
-def visualizar(escala_service):
+def visualizar(
+    escala_service
+):
+
     print()
     print("=== VISUALIZAR ESCALA ===")
     print()
 
     try:
+
         id_escala = int(
             input("ID da escala: ")
         )
+
     except ValueError:
+
         print()
         print("ID inválido.")
         return
@@ -97,20 +140,25 @@ def visualizar(escala_service):
     )
 
     if escala is None:
+
         print()
         print("Digite um ID válido.")
         return
 
     print()
+
     print(
         f"=== ESCALA: {escala.nome} ==="
     )
+
     print()
 
     if not escala.ocorrencias:
+
         print(
             "Esta escala não possui ocorrências."
         )
+
         return
 
     print(
@@ -122,6 +170,7 @@ def visualizar(escala_service):
     )
 
     for ocorrencia in escala.ocorrencias:
+
         data = ocorrencia.data.strftime(
             "%d/%m/%Y"
         )
@@ -129,6 +178,7 @@ def visualizar(escala_service):
         for atribuicao in (
             ocorrencia.atribuicoes
         ):
+
             print(
                 f"{ocorrencia.id:<5}"
                 f"{data:<15}"
@@ -138,6 +188,118 @@ def visualizar(escala_service):
             )
 
 
+def exportar(
+    escala_service,
+    pessoa_service
+):
+
+    print()
+    print("=== EXPORTAR ESCALA ===")
+    print()
+
+    escalas = escala_service.listar_todas()
+
+    if not escalas:
+
+        print(
+            "Nenhuma escala cadastrada."
+        )
+
+        return
+
+    print(
+        f"{'ID':<5}"
+        f"{'NOME':<25}"
+        f"{'PERÍODO'}"
+    )
+
+    for escala in escalas:
+
+        periodo = obter_periodo(
+            escala
+        )
+
+        print(
+            f"{escala.id:<5}"
+            f"{escala.nome:<25}"
+            f"{periodo}"
+        )
+
+    print()
+
+    try:
+
+        id_escala = int(
+            input(
+                "ID da escala para exportar: "
+            )
+        )
+
+    except ValueError:
+
+        print()
+        print(
+            "ID inválido."
+        )
+
+        return
+
+    escala = escala_service.buscar_por_id(
+        id_escala
+    )
+
+    if escala is None:
+
+        print()
+        print(
+            "Digite um ID válido."
+        )
+
+        return
+
+    if not escala.ocorrencias:
+
+        print()
+        print(
+            "Esta escala não possui ocorrências."
+        )
+
+        return
+
+    exportador = ExportadorExcelService()
+
+    try:
+
+        caminho = exportador.exportar(
+            escala,
+            pessoa_service.listar_todos()
+        )
+
+    except Exception as erro:
+
+        print()
+        print(
+            "Erro ao exportar a escala:"
+        )
+
+        print(
+            erro
+        )
+
+        return
+
+    print()
+    print(
+        "Escala exportada com sucesso."
+    )
+
+    print()
+
+    print(
+        f"Arquivo: {caminho}"
+    )
+
+
 def gerar_nova_escala(
     escala_service,
     pessoa_service,
@@ -145,6 +307,7 @@ def gerar_nova_escala(
     gerador_escala_service,
     motor_distribuicao
 ):
+
     print()
     print("=== GERAR NOVA ESCALA ===")
     print()
@@ -158,11 +321,13 @@ def gerar_nova_escala(
     ).strip()
 
     if not nome:
+
         print()
         print(
             "Nome da escala é obrigatório."
         )
-        return
+
+        return False
 
     # --------------------------------------------------
     # DATA INICIAL
@@ -173,7 +338,7 @@ def gerar_nova_escala(
     )
 
     if data_inicio is None:
-        return
+        return False
 
     # --------------------------------------------------
     # DATA FINAL
@@ -184,15 +349,17 @@ def gerar_nova_escala(
     )
 
     if data_fim is None:
-        return
+        return False
 
     if data_inicio > data_fim:
+
         print()
         print(
             "A data inicial não pode ser maior "
             "que a data final."
         )
-        return
+
+        return False
 
     # --------------------------------------------------
     # EVENTOS
@@ -201,17 +368,20 @@ def gerar_nova_escala(
     eventos = evento_service.listar_todos()
 
     if not eventos:
+
         print()
         print(
             "Nenhum evento cadastrado."
         )
-        return
+
+        return False
 
     print()
     print("=== EVENTOS DISPONÍVEIS ===")
     print()
 
     for evento in eventos:
+
         funcoes = ", ".join(
             evento.funcoes_necessarias
         )
@@ -233,43 +403,51 @@ def gerar_nova_escala(
     eventos_selecionados = []
 
     for valor in ids:
+
         valor = valor.strip()
 
         if not valor:
             continue
 
         try:
+
             id_evento = int(valor)
 
         except ValueError:
+
             print()
             print(
                 f"ID de evento inválido: {valor}"
             )
-            return
+
+            return False
 
         evento = evento_service.buscar_por_id(
             id_evento
         )
 
         if evento is None:
+
             print()
             print(
                 f"Evento inválido: {id_evento}"
             )
-            return
+
+            return False
 
         eventos_selecionados.append(
             evento
         )
 
     if not eventos_selecionados:
+
         print()
         print(
             "É necessário selecionar pelo menos "
             "um evento."
         )
-        return
+
+        return False
 
     # --------------------------------------------------
     # CONFIGURAÇÃO DAS REGRAS DOS EVENTOS
@@ -282,6 +460,7 @@ def gerar_nova_escala(
     while indice_evento < len(
         eventos_selecionados
     ):
+
         evento = eventos_selecionados[
             indice_evento
         ]
@@ -290,15 +469,14 @@ def gerar_nova_escala(
             evento
         )
 
-        # 0 na escolha da regra:
-        # volta para a seleção dos eventos.
-
         if resultado is None:
+
             print()
             print(
-                "Voltando para a seleção dos eventos."
+                "Geração da escala cancelada."
             )
-            return
+
+            return False
 
         eventos_configurados.append(
             resultado
@@ -342,6 +520,7 @@ def gerar_nova_escala(
     for evento_configurado in (
         configuracao.eventos
     ):
+
         print(
             f"- {evento_configurado.evento.nome}"
         )
@@ -367,23 +546,27 @@ def gerar_nova_escala(
     )
 
     print()
+
     print(
         f"Ocorrências geradas: "
         f"{len(ocorrencias)}"
     )
 
     if not ocorrencias:
+
         print()
         print(
             "Nenhuma ocorrência foi gerada."
         )
-        return
+
+        return False
 
     print()
     print("=== OCORRÊNCIAS ===")
     print()
 
     for ocorrencia in ocorrencias:
+
         print(
             f"{ocorrencia.data.strftime('%d/%m/%Y')}"
             f" - "
@@ -404,12 +587,14 @@ def gerar_nova_escala(
     )
 
     if not funcoes_necessarias:
+
         print()
         print(
             "Nenhuma função foi encontrada "
             "nas ocorrências."
         )
-        return
+
+        return False
 
     print()
     print("=== FUNÇÕES DA ESCALA ===")
@@ -419,6 +604,7 @@ def gerar_nova_escala(
         funcoes_necessarias,
         start=1
     ):
+
         print(
             f"F{indice} - {funcao}"
         )
@@ -437,24 +623,29 @@ def gerar_nova_escala(
     )
 
     if not pessoas_iniciais:
+
         print()
         print(
             f"Nenhuma pessoa disponível "
             f"para iniciar a F1 ({funcao_f1})."
         )
-        return
+
+        return False
 
     print()
+
     print(
         f"=== PESSOA INICIAL DA F1: "
         f"{funcao_f1} ==="
     )
+
     print()
 
     for indice, pessoa in enumerate(
         pessoas_iniciais,
         start=1
     ):
+
         print(
             f"{indice} - {pessoa.nome}"
         )
@@ -464,35 +655,47 @@ def gerar_nova_escala(
     print()
 
     while True:
+
         entrada = input(
             "Escolha a pessoa que inicia a F1: "
         ).strip()
 
         if entrada == "0":
+
             print()
             print(
                 "Geração da escala cancelada."
             )
-            return
+
+            return False
 
         try:
-            indice_pessoa = int(entrada)
+
+            indice_pessoa = int(
+                entrada
+            )
 
         except ValueError:
+
             print()
             print(
                 "Opção inválida."
             )
+
             continue
 
         if (
             indice_pessoa < 1
-            or indice_pessoa > len(pessoas_iniciais)
+            or indice_pessoa > len(
+                pessoas_iniciais
+            )
         ):
+
             print()
             print(
                 "Opção inválida."
             )
+
             continue
 
         pessoa_inicial_f1 = (
@@ -504,6 +707,7 @@ def gerar_nova_escala(
         break
 
     print()
+
     print(
         f"Pessoa inicial da F1: "
         f"{pessoa_inicial_f1.nome}"
@@ -514,11 +718,13 @@ def gerar_nova_escala(
     # --------------------------------------------------
 
     print()
+
     print(
         "Distribuindo funções..."
     )
 
     try:
+
         motor_distribuicao.distribuir_todas_as_funcoes(
             pessoas=pessoa_service.listar_todos(),
             ocorrencias=ocorrencias,
@@ -527,42 +733,53 @@ def gerar_nova_escala(
         )
 
     except ValueError as erro:
+
         print()
         print(
             "Erro na distribuição:"
         )
+
         print(erro)
+
         print()
+
         print(
             "A escala NÃO foi persistida."
         )
-        return
+
+        return False
 
     print()
+
     print(
         "Distribuição concluída."
     )
 
     # --------------------------------------------------
-    # VALIDAR SE TODAS AS ATRIBUIÇÕES FORAM PREENCHIDAS
+    # VALIDAR DISTRIBUIÇÃO
     # --------------------------------------------------
 
-    if not validar_distribuicao(ocorrencias):
+    if not validar_distribuicao(
+        ocorrencias
+    ):
+
         print()
+
         print(
             "A distribuição não foi concluída "
             "corretamente."
         )
+
         print()
+
         print(
             "A escala NÃO foi persistida."
         )
-        return
+
+        return False
 
     # --------------------------------------------------
-    # PERSISTÊNCIA
-    #
-    # SOMENTE AQUI a escala é criada no serviço.
+    # PERSISTÊNCIA EM MEMÓRIA
     # --------------------------------------------------
 
     escala = escala_service.criar(
@@ -571,9 +788,11 @@ def gerar_nova_escala(
     )
 
     print()
+
     print(
         "=== ESCALA GERADA COM SUCESSO ==="
     )
+
     print()
 
     print(
@@ -590,6 +809,7 @@ def gerar_nova_escala(
     )
 
     print()
+
     print(
         "Scheduler concluído."
     )
@@ -599,24 +819,47 @@ def gerar_nova_escala(
     )
 
     print(
-        "Escala persistida com sucesso."
+        "Escala criada com sucesso."
     )
 
+    print()
 
-def validar_distribuicao(ocorrencias):
+    print(
+        "A escala será salva no JSON "
+        "ao voltar para o menu anterior."
+    )
+
+    # --------------------------------------------------
+    # AVISA AO MENU QUE HOUVE ALTERAÇÃO
+    # --------------------------------------------------
+
+    return True
+
+
+def validar_distribuicao(
+    ocorrencias
+):
+
     """
     Garante que nenhuma atribuição ficou sem pessoa.
     """
 
     for ocorrencia in ocorrencias:
-        for atribuicao in ocorrencia.atribuicoes:
+
+        for atribuicao in (
+            ocorrencia.atribuicoes
+        ):
+
             if not atribuicao["pessoa"]:
                 return False
 
     return True
 
 
-def criar_evento_configurado(evento):
+def criar_evento_configurado(
+    evento
+):
+
     regra = escolher_regra(
         evento
     )
@@ -630,18 +873,25 @@ def criar_evento_configurado(evento):
     )
 
 
-def escolher_regra(evento):
+def escolher_regra(
+    evento
+):
+
     while True:
+
         print()
+
         print(
             f"=== REGRA DO EVENTO: "
             f"{evento.nome} ==="
         )
+
         print()
 
         print("0 - Voltar")
         print("1 - Semanal")
         print("2 - Mensal")
+
         print()
 
         opcao = input(
@@ -649,21 +899,25 @@ def escolher_regra(evento):
         )
 
         if opcao == "0":
+
             return None
 
         elif opcao == "1":
+
             regra = criar_regra_semanal()
 
             if regra is not None:
                 return regra
 
         elif opcao == "2":
+
             regra = criar_regra_mensal()
 
             if regra is not None:
                 return regra
 
         else:
+
             print()
             print(
                 "Opção inválida."
@@ -671,6 +925,7 @@ def escolher_regra(evento):
 
 
 def criar_regra_semanal():
+
     from scheduler.regra_semanal import (
         RegraSemanal
     )
@@ -687,6 +942,7 @@ def criar_regra_semanal():
     print("4 - Sexta")
     print("5 - Sábado")
     print("6 - Domingo")
+
     print()
 
     entrada = input(
@@ -696,35 +952,43 @@ def criar_regra_semanal():
     dias = []
 
     for valor in entrada.split(","):
+
         valor = valor.strip()
 
         if not valor:
             continue
 
         try:
+
             dia = int(valor)
 
         except ValueError:
+
             print()
             print(
                 f"Dia inválido: {valor}"
             )
+
             return None
 
         dias.append(dia)
 
     try:
+
         return RegraSemanal(
             dias=dias
         )
 
     except ValueError as erro:
+
         print()
         print(erro)
+
         return None
 
 
 def criar_regra_mensal():
+
     from scheduler.regra_mensal import (
         RegraMensal
     )
@@ -741,9 +1005,11 @@ def criar_regra_mensal():
     print("4 - Sexta")
     print("5 - Sábado")
     print("6 - Domingo")
+
     print()
 
     try:
+
         dia_semana = int(
             input("Dia da semana: ")
         )
@@ -760,14 +1026,20 @@ def criar_regra_mensal():
         )
 
     except ValueError as erro:
+
         print()
+
         print(
             f"Valor inválido: {erro}"
         )
+
         return None
 
 
-def nome_da_regra(regra):
+def nome_da_regra(
+    regra
+):
+
     nome_classe = (
         regra.__class__.__name__
     )
@@ -781,12 +1053,16 @@ def nome_da_regra(regra):
     return nome_classe
 
 
-def ler_data(mensagem):
+def ler_data(
+    mensagem
+):
+
     entrada = input(
         mensagem
     ).strip()
 
     try:
+
         dia, mes, ano = map(
             int,
             entrada.split("/")
@@ -799,15 +1075,21 @@ def ler_data(mensagem):
         )
 
     except ValueError:
+
         print()
+
         print(
             "Data inválida. "
             "Use o formato DD/MM/AAAA."
         )
+
         return None
 
 
-def obter_periodo(escala):
+def obter_periodo(
+    escala
+):
+
     if not escala.ocorrencias:
         return "Sem ocorrências"
 
